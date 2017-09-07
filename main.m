@@ -140,7 +140,6 @@ for user = 1:num_users
             if find(strcmp('User FB before correction', method_name))
                 %load real feedback of the user    
                 Feedback = [Feedback_all(:,user),considered_kws];
-%                 Feedback(Feedback(:,1)==0) = 0.01;
                 posterior = calculate_posterior(X_train, Y_train, Feedback, ...
                     sparse_params, sparse_options);
             end
@@ -158,9 +157,8 @@ for user = 1:num_users
                 fu_inf = 1 ./ (1 + ba);
                 fu_inf(I_dont_knows) = -1;
                 FB_biased_inferred(:,user) = fu_inf;
-                %If the assumptions about user behavior are correct, then fu_inf is equal to the hidden fu.
+                %If the assumptions about user behavior are correct, then fu_inf is the hidden fu.
                 Feedback = [fu_inf,considered_kws];
-%                 Feedback(Feedback(:,1)==0) = 0.01;
                 posterior = calculate_posterior(X_train, Y_train, Feedback, ...
                     sparse_params, sparse_options);
             end            

@@ -135,7 +135,8 @@ else
     si.w_sign_f_p_u_prior.bernoulli_p_nat = log(pr.p_u) - log1p(-pr.p_u);
     si.gamma_f_p_u_prior.bernoulli_p_nat = (log(pr.p_u) - log1p(-pr.p_u)) * ones(m, 1);
     if n_gamma_feedbacks > 0
-        tmp_vals = max(1 - gamma_feedbacks(:, 1), gamma_feedbacks(:, 1));
+        %tmp_vals = max(1 - gamma_feedbacks(:, 1), gamma_feedbacks(:, 1));
+        tmp_vals = min(max(1 - gamma_feedbacks(:, 1), gamma_feedbacks(:, 1)), 1-eps);        
         si.gamma_f_p_u_prior.bernoulli_p_nat(gamma_feedbacks(:, 2)) = log(tmp_vals) - log1p(-tmp_vals);
         gamma_feedbacks(:, 1) = gamma_feedbacks(:, 1) >= 0.5;
     end
