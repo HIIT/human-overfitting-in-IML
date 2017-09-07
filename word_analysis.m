@@ -46,7 +46,7 @@ disp(['num of I dont knows in biased system: ',num2str(sum(I_dont_know_biased))]
 
 load('FB_biased_inferred');
 FB_source_inferred = FB_biased_inferred;
-FB_source_inferred(:,filtered_users_biased) = [];
+% FB_source_inferred(:,filtered_users_biased) = [];
 mean_biased_inferred = zeros(num_kws,1);
 var_biased_inferred  = zeros(num_kws,1);
 std_biased_inferred = zeros(num_kws,1);

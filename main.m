@@ -42,7 +42,9 @@ num_users          = size(FB_source,2);
 Feedback_all = FB_source;
 
 FB_biased_inferred = zeros(size(FB_source,1), num_users); %dummy
-
+% validation_indices is required in the post analyses (alpha CV model)
+validation_indices =  datasample(1:size(Y_test,1),1000,'Replace',false); 
+figure %this is needed for plotting the CV results of the alpha CV model
 num_iterations   = 70; %total number of user feedback (not used for now)
 
 %Features that were used in the user study
@@ -92,6 +94,7 @@ METHODS_GT = {
      'True',   'no feedback';
      'True',   'User FB before correction';
      'True',   'User FB after correction';     
+     'False',   'User FB after correction - alpha CV model';
      }; 
 Method_list_ED = [];
 for m = 1:size(METHODS_ED,1)
@@ -116,7 +119,7 @@ Loss_2 = zeros(num_methods, num_iterations, num_users); % MSE on train
 posterior_no_fb = calculate_posterior(X_train, Y_train, [], ...
      sparse_params, sparse_options);
 Machine_estimates = posterior_no_fb.p(considered_kws);
-Machine_estimates = round(100*Machine_estimates)/100;
+Machine_estimates = round(100*Machine_estimates)/100; %this is how we show the values to the users
 
 tic
 
@@ -136,6 +139,7 @@ for user = 1:num_users
             if find(strcmp('no feedback', method_name))
                 posterior = posterior_no_fb;
             end
+            
             
             if find(strcmp('User FB before correction', method_name))
                 %load real feedback of the user    
@@ -161,8 +165,51 @@ for user = 1:num_users
                 Feedback = [fu_inf,considered_kws];
                 posterior = calculate_posterior(X_train, Y_train, Feedback, ...
                     sparse_params, sparse_options);
-            end            
-          
+            end
+            
+            
+            if find(strcmp('User FB after correction - alpha CV model', method_name))
+                tr_p = posterior_no_fb.p(considered_kws);
+                
+                %load real feedback of the user
+                fu_upd = Feedback_all(:,user);
+                I_dont_knows = fu_upd == -1;
+                %Infer user hidden likelihood assume that: 
+                % fu_inf = f (1 - p)^a / ((f (1 - p)^a + (1 - f) p^a)
+                % learn alpha through CV on some validation set
+                %What is the best alpha for the current user?
+                alphas = 0:0.1:2;
+                mse_val = zeros(size(alphas,2),1);
+                for i = 1:size(alphas,2)
+                    %infer the feedback for the given alpha
+                    numerator = fu_upd .* (1-tr_p).^alphas(i);
+                    denominator = numerator + (1-fu_upd) .* tr_p.^alphas(i);
+                    fu_inf = numerator./denominator;
+                    fu_inf(I_dont_knows) = -1;
+                    %compute the posterior
+                    posterior_temp = calculate_posterior(X_train, Y_train, [fu_inf,considered_kws], ...
+                        sparse_params, sparse_options);
+                    %calculate validation error
+                    Y_hat_val = X_test(:,validation_indices)'*posterior_temp.mean;
+                    Y_hat_val = Y_hat_val .* y_std + y_mean;
+                    mse_val(i) =  mean((Y_hat_val- Y_test(validation_indices)).^2);
+                end
+                [best_mse_val,idx] = min(mse_val);
+                disp(['best alpha for user ',num2str(user),' is ', num2str(alphas(idx)) ]);
+                subplot(6,3,user)
+                plot(alphas,mse_val,'.-');
+                numerator = fu_upd .* (1-tr_p).^alphas(idx);
+                denominator = numerator + (1-fu_upd) .* tr_p.^alphas(idx);
+                fu_inf = numerator./denominator;
+                fu_inf(I_dont_knows) = -1;                  
+%                 FB_biased_inferred(:,user) = fu_inf;
+                %If the assumptions about user behavior are correct, then fu_inf is the hidden fu.
+                Feedback = [fu_inf,considered_kws];
+                posterior = calculate_posterior(X_train, Y_train, Feedback, ...
+                    sparse_params, sparse_options);
+            end
+            
+            
             %calculate training and test error  
             Y_hat = X_test'*posterior.mean;
             Y_hat = Y_hat .* y_std + y_mean;
@@ -173,7 +220,8 @@ for user = 1:num_users
         
     end 
 end
-% save('FB_biased_inferred')
+%we may want to investigate the inferred likelihood values later
+save('FB_biased_inferred','FB_biased_inferred')
 %% averaging and plotting
 save('user_study_mse_results', 'Loss_1', 'Loss_2', 'sparse_options','sparse_params','Machine_estimates', ...
      'Method_list',  'num_features','num_trainingdata','RNG_SEED')
