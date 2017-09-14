@@ -6,11 +6,15 @@ close all
 data_addr = 'Data-Exp1\';
 load([data_addr,'User_study_results'])
 
+% % %This is just to test the correlations with Machine estimates
+% % load('gamma_opt.mat')
+% % Machine_estimates = gamma_opt;
+
+
 %% Exp1 - Biased system
 % people_who_said_NO = [2,3,6,11,14,15,18,19,20,21];
 
 num_kws = size(Selected_keywords,1);
-
 FB_source_biased = Feedbacks_sys_biased;
 % The following participants are filtered because they did not answer
 % 2/3 of questions or they time was less than 3 mins
@@ -105,6 +109,29 @@ end
 xlabel('keywords')
 ylabel('average users feedback (probability of relevance)')
 
+%% Inffer the optimum alpha_j by assuming that the best alpha brings mean_biased estimate toward mean_baseline
+% UPDATE: This assumption is wrong. Isn't the result that the users with the system with machine estimates get 
+%  better performance evidence against that the "unbiased" system would have the "best" feedback? 
+best_alphas = zeros(num_kws,1);
+for kw =1:num_kws
+    best_a = -1;
+    best_err = inf;
+    for a = 0:0.1:2
+        numerator = mean_biased(kw) .* (1-Machine_estimates(kw)).^a;
+        denominator = numerator + (1-mean_biased(kw)) .* Machine_estimates(kw).^a;
+        fu_inf = numerator./denominator;
+        error = abs(fu_inf-mean_baseline(kw));
+        if  error< best_err
+            best_err = error;
+            best_a = a;
+        end
+    end
+    best_alphas(kw) = best_a;
+end
+
+numerator = mean_biased .* (1-Machine_estimates).^best_alphas;
+denominator = numerator + (1-mean_biased) .* Machine_estimates.^best_alphas;
+fu_inf_all_alphas = numerator./denominator;
 %% check the significance of the difference
 Hypo_kws = zeros(num_kws,1);
 P_val_kws = zeros(num_kws,1);
@@ -131,12 +158,18 @@ T = table(Machine_estimates(indices), mean_biased(indices),mean_baseline(indices
     'VariableNames',{'Machine';'Biased_ave';'Baseline_ave';'Inferred_ave';'P_Value'});
 disp(T);
 
+% T = table(Machine_estimates(indices), mean_biased(indices),mean_baseline(indices),mean_biased_inferred(indices),fu_inf_all_alphas(indices),best_alphas(indices),...
+%     P_val_kws(indices), 'RowNames',Selected_keywords(indices),...
+%     'VariableNames',{'Machine';'Biased_ave';'Baseline_ave';'Inferred_ave';'best_fu';'alphas';'P_Value'});
+% disp(T);
 % Plot a figure with x-axis as the p-values and y-axis as the average relevance 
 figure;
 hold on
 plot(P_val_kws(sorted_idx),mean_biased(sorted_idx),'rs')
 plot(P_val_kws(sorted_idx),mean_baseline(sorted_idx),'bs')
 plot(P_val_kws(sorted_idx),Machine_estimates(sorted_idx),'gs')
+% plot(P_val_kws(sorted_idx),mean_biased_inferred(sorted_idx),'ko')
+% plot(P_val_kws(sorted_idx),fu_inf_all_alphas(sorted_idx),'r*')
 legend( 'biased','baseline','Machine estimate')
 for kw =1:num_kws
     plot([P_val_kws(kw),P_val_kws(kw)],[mean_baseline(kw),mean_biased(kw)],'r--');
@@ -178,7 +211,7 @@ for kw =1:num_kws
 %     plot([P_val_kws(kw),P_val_kws(kw)],[Machine_estimates(kw),mean_biased(kw)],'g--');
     text(diff_var(kw),var_biased(kw),Selected_keywords(kw),'HorizontalAlignment','right')
 end
-title('different between variance of baseline and biased')
+title('difference between variance of baseline and biased')
 xlabel('distance')
 ylabel('variance')
 
