@@ -1,25 +1,14 @@
 clear all
 close all
 
-
 % load user feedbacks in biased and baseline system
 data_addr = 'Data-Exp1\';
 load([data_addr,'User_study_results'])
 
-% % %This is just to test the correlations with Machine estimates
-% % load('gamma_opt.mat')
-% % Machine_estimates = gamma_opt;
-
 
 %% Exp1 - Biased system
-% people_who_said_NO = [2,3,6,11,14,15,18,19,20,21];
-
 num_kws = size(Selected_keywords,1);
 FB_source_biased = Feedbacks_sys_biased;
-% The following participants are filtered because they did not answer
-% 2/3 of questions or they time was less than 3 mins
-filtered_users_biased = [12,13,18]; %12,13,17,18
-FB_source_biased(:,filtered_users_biased) = [];
 
 I_dont_know_biased = FB_source_biased == -1;
 mean_biased = zeros(num_kws,1);
@@ -50,7 +39,6 @@ disp(['num of I dont knows in biased system: ',num2str(sum(I_dont_know_biased))]
 
 load('FB_biased_inferred');
 FB_source_inferred = FB_biased_inferred;
-% FB_source_inferred(:,filtered_users_biased) = [];
 mean_biased_inferred = zeros(num_kws,1);
 var_biased_inferred  = zeros(num_kws,1);
 std_biased_inferred = zeros(num_kws,1);
@@ -99,6 +87,7 @@ disp(['num of I dont knows in baseline system: ',num2str(sum(I_dont_know_baselin
 
 %% Plotting and analysis
 %Average user behaviors in two systems
+disp(['num of users: Biased = ', num2str(num_users_biased),', Baseline = ', num2str(num_users_baseline)])
 figure
 hold on
 plot([mean_baseline,mean_biased,mean_biased_inferred,Machine_estimates],'s')
@@ -109,38 +98,21 @@ end
 xlabel('keywords')
 ylabel('average users feedback (probability of relevance)')
 
-%% Inffer the optimum alpha_j by assuming that the best alpha brings mean_biased estimate toward mean_baseline
-% UPDATE: This assumption is wrong. Isn't the result that the users with the system with machine estimates get 
-%  better performance evidence against that the "unbiased" system would have the "best" feedback? 
-best_alphas = zeros(num_kws,1);
-for kw =1:num_kws
-    best_a = -1;
-    best_err = inf;
-    for a = 0:0.1:2
-        numerator = mean_biased(kw) .* (1-Machine_estimates(kw)).^a;
-        denominator = numerator + (1-mean_biased(kw)) .* Machine_estimates(kw).^a;
-        fu_inf = numerator./denominator;
-        error = abs(fu_inf-mean_baseline(kw));
-        if  error< best_err
-            best_err = error;
-            best_a = a;
-        end
-    end
-    best_alphas(kw) = best_a;
-end
-
-numerator = mean_biased .* (1-Machine_estimates).^best_alphas;
-denominator = numerator + (1-mean_biased) .* Machine_estimates.^best_alphas;
-fu_inf_all_alphas = numerator./denominator;
 %% check the significance of the difference
 Hypo_kws = zeros(num_kws,1);
 P_val_kws = zeros(num_kws,1);
 for kw = 1:num_kws
     indx = ~I_dont_know_biased(kw,:); 
     indx2 = ~I_dont_know_baseline(kw,:);
+    
     % Test the null hypothesis that the two data vectors are from populations with equal means,
     %  without assuming that the populations also have equal variances.
     [Hypo_kws(kw),P_val_kws(kw)] = ttest2(FB_source_biased(kw,indx),FB_source_baseline(kw,indx2),'Vartype','unequal');
+    
+    % Two-sided Wilcoxon rank sum test. ranksum tests the null hypothesis that data in x and y are samples 
+    % from continuous distributions with equal medians, against the alternative that they are not. 
+    % The test assumes that the two samples are independent. x and y can have different lengths.
+%     [P_val_kws(kw),Hypo_kws(kw)] = ranksum(FB_source_biased(kw,indx),FB_source_baseline(kw,indx2));
 end
 
 %What are the keywords with highest difference in answers in the two systems
@@ -150,13 +122,15 @@ num_to_show = 30;
 indices = sorted_idx(1:num_to_show);
 % indices = sorted_idx(num_kws-num_to_show:end);
 % indices = Hypo_kws==1;
-% T = table(Machine_estimates(indices), mean_biased(indices),mean_baseline(indices),...
-%     Hypo_kws(indices), P_val_kws(indices), 'RowNames',Selected_keywords(indices),...
-%     'VariableNames',{'Machine';'Biased_ave';'Baseline_ave';'Sig_Diff';'P_Value'});
-T = table(Machine_estimates(indices), mean_biased(indices),mean_baseline(indices),mean_biased_inferred(indices),...
+
+T = table(Machine_estimates(indices), round(mean_biased(indices)*100)/100,round(mean_baseline(indices)*100)/100,...
     P_val_kws(indices), 'RowNames',Selected_keywords(indices),...
-    'VariableNames',{'Machine';'Biased_ave';'Baseline_ave';'Inferred_ave';'P_Value'});
+    'VariableNames',{'Machine';'Biased_ave';'Baseline_ave';'P_Value'});
 disp(T);
+% T = table(Machine_estimates(indices), mean_biased(indices),mean_baseline(indices),mean_biased_inferred(indices),...
+%     P_val_kws(indices), 'RowNames',Selected_keywords(indices),...
+%     'VariableNames',{'Machine';'Biased_ave';'Baseline_ave';'Inferred_ave';'P_Value'});
+% disp(T);
 
 % T = table(Machine_estimates(indices), mean_biased(indices),mean_baseline(indices),mean_biased_inferred(indices),fu_inf_all_alphas(indices),best_alphas(indices),...
 %     P_val_kws(indices), 'RowNames',Selected_keywords(indices),...
@@ -246,8 +220,8 @@ Rho_between_means(3) = corr(mean_biased,Machine_estimates);
 Rho_between_means(4) = corr(mean_biased_inferred,mean_baseline);
 Rho_between_means(5) = corr(mean_biased_inferred,mean_biased);
 Rho_between_means(6) = corr(mean_biased_inferred,Machine_estimates);
-disp('Rho between mean of all users: biased and baseline, baseline and machine, biased and machine, inferred and baseline, inferred and biased, inferred and machine')
-disp(Rho_between_means')
+% disp('Rho between mean of all users: biased and baseline, baseline and machine, biased and machine, inferred and baseline, inferred and biased, inferred and machine')
+% disp(Rho_between_means')
 
 
 %% For each user, compute average corr between and within
@@ -386,5 +360,26 @@ title('correlation to baseline users')
 xlabel('pearson correlation')
 
 
-%%% CAN WE DO THESE CORRELATIN ANALYSIS IN THE WORD LEVEL RATHER THAN FULL
-%%% SET OF WORDS CORRELATION?
+%% Inffer the optimum alpha_j by assuming that the best alpha brings mean_biased estimate toward mean_baseline
+% % UPDATE: This assumption is wrong. Isn't the result that the users with the system with machine estimates get 
+% %  better performance evidence against that the "unbiased" system would have the "best" feedback? 
+% best_alphas = zeros(num_kws,1);
+% for kw =1:num_kws
+%     best_a = -1;
+%     best_err = inf;
+%     for a = 0:0.1:2
+%         numerator = mean_biased(kw) .* (1-Machine_estimates(kw)).^a;
+%         denominator = numerator + (1-mean_biased(kw)) .* Machine_estimates(kw).^a;
+%         fu_inf = numerator./denominator;
+%         error = abs(fu_inf-mean_baseline(kw));
+%         if  error< best_err
+%             best_err = error;
+%             best_a = a;
+%         end
+%     end
+%     best_alphas(kw) = best_a;
+% end
+% 
+% numerator = mean_biased .* (1-Machine_estimates).^best_alphas;
+% denominator = numerator + (1-mean_biased) .* Machine_estimates.^best_alphas;
+% fu_inf_all_alphas = numerator./denominator;

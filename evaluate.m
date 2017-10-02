@@ -15,7 +15,7 @@ disp('Feedback is on the probability of relevance of features');
 
 disp(['Number of features: ', num2str(num_features),'.']);
 disp(['Number of training data: ', num2str(num_trainingdata),'.']);
-disp(['Number of users ', num2str(num_users), ' runs.']);
+disp(['Number of users ', num2str(num_users), '.']);
 
 figure
 Loss_1_mean = mean(Loss_1,3)';
@@ -75,16 +75,20 @@ end
 figure
 hold on
 h2 = histogram(GT_methods_loss_1(method_OF_user,:) - GT_methods_loss_1(method_inferred_user,:));
-h2.BinWidth = 0.005;
+h2.BinWidth = 0.006;
 title(['Correction effect for ' num2str(num_users) ' users'])
-xlabel('Decreaase in MSE after bias correction')
-plot([0,0],[0,2],'r--')
-% figure
-% %for real data case Loss_2 is MSE on training in the normalized space
-% Loss_2_mean = mean(Loss_2,3)';
-% %This one is the data
-% plot([1:num_iterations], Loss_2_mean,'.-','LineWidth',2);
-% legend(Method_list)
-% title('Loss function')
-% xlabel('Number of Expert Feedbacks')
-% ylabel('Mean Squared Error on Training')
+xlabel('Mean Squared Error change','FontSize',16)
+ylabel('Number of Participants','FontSize',16)
+plot([0,0],[0,4],'r--')
+
+
+%training data error
+figure
+%Loss_2 is MSE on training in the normalized space
+Loss_2_mean = mean(Loss_2,3)';
+%Iterations are not used in this study
+plot([1:num_iterations], Loss_2_mean,'.-','LineWidth',2);
+legend(Method_list)
+title('Loss function')
+xlabel('Number of Expert Feedbacks')
+ylabel('Mean Squared Error on Training')
