@@ -77,11 +77,10 @@ sparse_params.sigma2_a  = 1;
 sparse_params.sigma2_b  = 1;
 
 %% METHOD LIST
-% NOTE: in this study we are not considering Sequentiality of methods but
-% rather the summed performance is what we are looking. We may later run the
-% methods sequentialy to be able to see the effect of each fb.
+% NOTE: in this study we are not considering Sequentiality of methods.
 
-% Set the desirable methods to 'True' and others to 'False'. only the 'True' methods will be considered in the simulation
+% Set the desirable methods to 'True' and others to 'False'. 
+% only the 'True' methods will be considered in the simulation
 METHODS = {
      'True',   'no feedback';
      'True',   'User FB before correction';
@@ -95,7 +94,8 @@ for m = 1:size(METHODS,1)
         Method_list = [Method_list,METHODS(m,2)];
     end
 end
-num_methods = size(Method_list,2); %number of decision making methods that we want to consider
+%number of methods that we want to consider
+num_methods = size(Method_list,2); 
 
 %% Main algorithm
 Loss_1 = zeros(num_methods, num_iterations, num_users); % MSE on test

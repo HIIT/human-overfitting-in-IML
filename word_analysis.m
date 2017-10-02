@@ -29,15 +29,15 @@ for user = 1:num_users_biased
     correlation_biased(user) = corr(FB_source_biased(indx,user),Machine_estimates(indx));
     user_var_biased(user) = var(FB_source_biased(indx,user));
 end
-disp(['average correlation in biased system: ', num2str(mean(correlation_biased))])
+disp(['average correlation to machine estimate in biased system: ', num2str(mean(correlation_biased))])
 
 % number of I don't know answers per users
 disp('number of I dont know answers for each user:')
 disp(['num of I dont knows in biased system: ',num2str(sum(I_dont_know_biased))])
 
 %% Exp1.5 - Biased system AFTER CORRECTION
-
-load('FB_biased_inferred');
+% First you need to run the main script once to generate these data
+load('FB_biased_inferred'); 
 FB_source_inferred = FB_biased_inferred;
 mean_biased_inferred = zeros(num_kws,1);
 var_biased_inferred  = zeros(num_kws,1);
@@ -56,7 +56,7 @@ for user = 1:num_users_biased
     correlation_biased_inferred(user) = corr(FB_source_inferred(indx,user),Machine_estimates(indx));
     user_var_biased_inferred(user) = var(FB_source_inferred(indx,user));
 end
-disp(['average correlation in biased system after correction: ', num2str(mean(correlation_biased_inferred))])
+disp(['average correlation to machine estimate in biased system after correction: ', num2str(mean(correlation_biased_inferred))])
 
 
 %% Exp2 - Baseline system
@@ -81,7 +81,7 @@ for user = 1:num_users_baseline
     correlation_baseline(user) = corr(FB_source_baseline(indx,user),Machine_estimates(indx));
     user_var_baseline(user) = var(FB_source_baseline(indx,user));
 end
-disp(['average correlation in baseline system: ', num2str(mean(correlation_baseline))])
+disp(['average correlation to machine estimate in baseline system: ', num2str(mean(correlation_baseline))])
 % number of I don't know answers per users
 disp(['num of I dont knows in baseline system: ',num2str(sum(I_dont_know_baseline))])
 
