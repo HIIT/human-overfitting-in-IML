@@ -1,10 +1,11 @@
+% This scripts compares the user feedbacks in the two system
+
 clear all
 close all
 
 % load user feedbacks in biased and baseline system
 data_addr = 'Data-Exp1\';
 load([data_addr,'User_study_results'])
-
 
 %% Exp1 - Biased system
 num_kws = size(Selected_keywords,1);
@@ -35,30 +36,6 @@ disp(['average correlation to machine estimate in biased system: ', num2str(mean
 disp('number of I dont know answers for each user:')
 disp(['num of I dont knows in biased system: ',num2str(sum(I_dont_know_biased))])
 
-%% Exp1.5 - Biased system AFTER CORRECTION
-% First you need to run the main script once to generate these data
-load('FB_biased_inferred'); 
-FB_source_inferred = FB_biased_inferred;
-mean_biased_inferred = zeros(num_kws,1);
-var_biased_inferred  = zeros(num_kws,1);
-std_biased_inferred = zeros(num_kws,1);
-for kw = 1:num_kws
-    indx = ~I_dont_know_biased(kw,:); 
-    mean_biased_inferred(kw) = mean(FB_source_inferred(kw,indx));
-    var_biased_inferred(kw) = var(FB_source_inferred(kw,indx));
-    std_biased_inferred(kw) = std(FB_source_inferred(kw,indx));
-end
-
-user_var_biased_inferred = zeros(num_users_biased,1);
-correlation_biased_inferred = zeros(1,num_users_biased);
-for user = 1:num_users_biased
-    indx = ~I_dont_know_biased(:,user);
-    correlation_biased_inferred(user) = corr(FB_source_inferred(indx,user),Machine_estimates(indx));
-    user_var_biased_inferred(user) = var(FB_source_inferred(indx,user));
-end
-disp(['average correlation to machine estimate in biased system after correction: ', num2str(mean(correlation_biased_inferred))])
-
-
 %% Exp2 - Baseline system
 
 FB_source_baseline = Feedbacks_sys_baseline;
@@ -84,19 +61,6 @@ end
 disp(['average correlation to machine estimate in baseline system: ', num2str(mean(correlation_baseline))])
 % number of I don't know answers per users
 disp(['num of I dont knows in baseline system: ',num2str(sum(I_dont_know_baseline))])
-
-%% Plotting and analysis
-%Average user behaviors in two systems
-disp(['num of users: Biased = ', num2str(num_users_biased),', Baseline = ', num2str(num_users_baseline)])
-figure
-hold on
-plot([mean_baseline,mean_biased,mean_biased_inferred,Machine_estimates],'s')
-legend('baseline', 'biased','biased_inferred','Machine')
-for kw =1:num_kws
-    plot([kw,kw],[mean_baseline(kw),mean_biased(kw)],'r');
-end
-xlabel('keywords')
-ylabel('average users feedback (probability of relevance)')
 
 %% check the significance of the difference
 Hypo_kws = zeros(num_kws,1);
@@ -127,16 +91,31 @@ T = table(Machine_estimates(indices), round(mean_biased(indices)*100)/100,round(
     P_val_kws(indices), 'RowNames',Selected_keywords(indices),...
     'VariableNames',{'Machine';'Biased_ave';'Baseline_ave';'P_Value'});
 disp(T);
-% T = table(Machine_estimates(indices), mean_biased(indices),mean_baseline(indices),mean_biased_inferred(indices),...
-%     P_val_kws(indices), 'RowNames',Selected_keywords(indices),...
-%     'VariableNames',{'Machine';'Biased_ave';'Baseline_ave';'Inferred_ave';'P_Value'});
-% disp(T);
 
-% T = table(Machine_estimates(indices), mean_biased(indices),mean_baseline(indices),mean_biased_inferred(indices),fu_inf_all_alphas(indices),best_alphas(indices),...
-%     P_val_kws(indices), 'RowNames',Selected_keywords(indices),...
-%     'VariableNames',{'Machine';'Biased_ave';'Baseline_ave';'Inferred_ave';'best_fu';'alphas';'P_Value'});
-% disp(T);
-% Plot a figure with x-axis as the p-values and y-axis as the average relevance 
+%% Exp1.5 - Biased system AFTER CORRECTION
+% First you need to run the main script (select_bias_experiment = true;) to generate these data
+load('FB_biased_inferred'); 
+FB_source_inferred = FB_biased_inferred;
+mean_biased_inferred = zeros(num_kws,1);
+var_biased_inferred  = zeros(num_kws,1);
+std_biased_inferred = zeros(num_kws,1);
+for kw = 1:num_kws
+    indx = ~I_dont_know_biased(kw,:); 
+    mean_biased_inferred(kw) = mean(FB_source_inferred(kw,indx));
+    var_biased_inferred(kw) = var(FB_source_inferred(kw,indx));
+    std_biased_inferred(kw) = std(FB_source_inferred(kw,indx));
+end
+
+user_var_biased_inferred = zeros(num_users_biased,1);
+correlation_biased_inferred = zeros(1,num_users_biased);
+for user = 1:num_users_biased
+    indx = ~I_dont_know_biased(:,user);
+    correlation_biased_inferred(user) = corr(FB_source_inferred(indx,user),Machine_estimates(indx));
+    user_var_biased_inferred(user) = var(FB_source_inferred(indx,user));
+end
+disp(['average correlation to machine estimate in biased system after correction: ', num2str(mean(correlation_biased_inferred))])
+
+%% Plot a figure with x-axis as the p-values and y-axis as the average relevance 
 figure;
 hold on
 plot(P_val_kws(sorted_idx),mean_biased(sorted_idx),'rs')
@@ -154,22 +133,19 @@ xlabel('p-value')
 ylabel('average relevance')
 title('difference between user feedbacks in baseline and biased system')
 
-% This is a good figure (at least better than the last one)
+%% Plotting and analysis
+%Average user behaviors in two systems
+disp(['num of users: Biased = ', num2str(num_users_biased),', Baseline = ', num2str(num_users_baseline)])
+figure
+hold on
+plot([mean_baseline,mean_biased,mean_biased_inferred,Machine_estimates],'s')
+legend('baseline', 'biased','biased_inferred','Machine')
+for kw =1:num_kws
+    plot([kw,kw],[mean_baseline(kw),mean_biased(kw)],'r');
+end
+xlabel('keywords')
+ylabel('average users feedback (probability of relevance)')
 
-% %Plot the variances
-% figure
-% hold on
-% h3 = histogram(var_baseline);
-% % h1.Normalization = 'probability';
-% h3.BinWidth = 0.01;
-% h3 = histogram(var_biased);
-% % h1.Normalization = 'probability';
-% h3.BinWidth = 0.01;
-% legend('var baseline', 'var biased')
-% plot([mean(var_baseline),mean(var_baseline)],[0,5],'b--')
-% plot([mean(var_biased),mean(var_biased)],[0,5],'r--')
-% title('histogram of variances')
-% xlabel('variance')
 
 %sort the difference in variance from smallest to largest
 diff_var = abs(var_biased - var_baseline);
