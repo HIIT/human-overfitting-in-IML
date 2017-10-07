@@ -27,3 +27,7 @@ As an example, the keywords "must buy" or "disaster" provide useful information 
 The initial position of the slider, for each keyword, is selected by the machine. This is based on a machine learning algorithm that has access to 500 reviews and their corresponding ratings. In other words, this is the best that the machine could learn from 500 example reviews.
  
  The expected time for completing the form is around 10 minutes.
+ 
+ <p align="center">
+  <img src="screenshot of the UI.PNG" width="500"/>
+</p>
