@@ -199,141 +199,163 @@ Rho_between_means(6) = corr(mean_biased_inferred,Machine_estimates);
 % disp('Rho between mean of all users: biased and baseline, baseline and machine, biased and machine, inferred and baseline, inferred and biased, inferred and machine')
 % disp(Rho_between_means')
 
-
-%% For each user, compute average corr between and within
-% first compute within group correlation for each user
-corr_within_baseline = zeros(num_users_baseline,num_users_baseline);
-for i = 1:num_users_baseline
-    for j = 1:num_users_baseline
-        indx_i = ~I_dont_know_baseline(:,i);
-        indx_j = ~I_dont_know_baseline(:,j);
+%% Create a correlation matrix between all users (of both systems) and plot it as a hitmap
+num_total_users = num_users_baseline+num_users_biased;
+FB_source_all = [FB_source_baseline,FB_source_biased];
+I_dont_know_all = [I_dont_know_baseline,I_dont_know_biased];
+corr_matrix = zeros(num_total_users,num_total_users);
+for i = 1:num_total_users
+    for j = i:num_total_users
+        indx_i = ~I_dont_know_all(:,i);
+        indx_j = ~I_dont_know_all(:,j);
         indx = indx_i & indx_j;
-        corr_within_baseline(i,j) = corr(FB_source_baseline(indx,i),FB_source_baseline(indx,j));
+        corr_matrix(i,j) = corr(FB_source_all(indx,i),FB_source_all(indx,j));
+        corr_matrix(j,i) = corr_matrix(i,j);
     end
 end
 figure
-subplot(3,1,1) 
-title('Within user group correlation for baseline system')
-imagesc(corr_within_baseline, [0,1]);     
-
-corr_within_biased = zeros(num_users_biased,num_users_biased);
-for i = 1:num_users_biased
-    for j = 1:num_users_biased
-        indx_i = ~I_dont_know_biased(:,i);
-        indx_j = ~I_dont_know_biased(:,j);
-        indx = indx_i & indx_j;
-        corr_within_biased(i,j) = corr(FB_source_biased(indx,i),FB_source_biased(indx,j));
-    end
-end
-subplot(3,1,2) 
-title('Within user group correlation for biased system')
-imagesc(corr_within_biased, [0,1]);             
-
-corr_within_infered = zeros(num_users_biased,num_users_biased);
-for i = 1:num_users_biased
-    for j = 1:num_users_biased
-        indx_i = ~I_dont_know_biased(:,i);
-        indx_j = ~I_dont_know_biased(:,j);
-        indx = indx_i & indx_j;
-        corr_within_infered(i,j) = corr(FB_source_inferred(indx,i),FB_source_inferred(indx,j));
-    end
-end
-subplot(3,1,3) 
-title('Within user group correlation for biased system')
-imagesc(corr_within_infered, [0,1]);     
-
-
-% second, calculate between users correlations
-% biased and baseline:
-corr_between_bas_bias = zeros(num_users_baseline,num_users_biased);
-for i = 1:num_users_baseline
-    for j = 1:num_users_biased
-        indx_i = ~I_dont_know_baseline(:,i);
-        indx_j = ~I_dont_know_biased(:,j);
-        indx = indx_i & indx_j;
-        corr_between_bas_bias(i,j) = corr(FB_source_baseline(indx,i),FB_source_biased(indx,j));
-    end
-end
-figure
-subplot(3,1,1) 
-title('between user group correlation of baseline and biased system')
-imagesc(corr_between_bas_bias, [0,1]);  
-
-% inferred and baseline:
-corr_between_bas_inf = zeros(num_users_baseline,num_users_biased);
-for i = 1:num_users_baseline
-    for j = 1:num_users_biased
-        indx_i = ~I_dont_know_baseline(:,i);
-        indx_j = ~I_dont_know_biased(:,j);
-        indx = indx_i & indx_j;
-        corr_between_bas_inf(i,j) = corr(FB_source_baseline(indx,i),FB_source_inferred(indx,j));
-    end
-end
-subplot(3,1,2) 
-title('between user group correlation of baseline and inferred system')
-imagesc(corr_between_bas_inf, [0,1]); 
-
-% inferred and biased:
-corr_between_bias_inf = zeros(num_users_biased,num_users_biased);
-for i = 1:num_users_biased
-    for j = 1:num_users_biased
-        indx_i = ~I_dont_know_biased(:,i);
-        indx_j = ~I_dont_know_biased(:,j);
-        indx = indx_i & indx_j;
-        corr_between_bias_inf(i,j) = corr(FB_source_biased(indx,i),FB_source_inferred(indx,j));
-    end
-end
-subplot(3,1,3) 
-title('between user group correlation of biased and inferred system')
-imagesc(corr_between_bias_inf, [0,1]); 
-
-
-%% Create a between within corr figure!
-
-% BIASED VS BASELINE
-ave_between_corr_bias = mean(corr_between_bas_bias,1);
-ave_between_corr_bas = mean(corr_between_bas_bias,2);
-
-ave_within_cor_bias = (sum(corr_within_biased)-1)./(num_users_biased-1);
-ave_within_cor_bas = (sum(corr_within_baseline)-1)./(num_users_baseline-1);
-ave_within_cor_inf = (sum(corr_within_infered)-1)./(num_users_biased-1);
-
-figure
-xlabel('within group correlation')
-ylabel('between groups correlation')
+imagesc(corr_matrix, [0,1]); 
+colormap Gray
+colorbar
 hold on
-plot([ave_within_cor_bas],[ave_between_corr_bas'],'sr')
-plot([ave_within_cor_bias],[ave_between_corr_bias],'sb')
-legend('Baseline system','Biased system')
+plot([num_users_baseline+0.5,num_users_baseline+1],[0,num_total_users+0.5],'r')
+plot([0,num_total_users+0.5],[num_users_baseline+0.5,num_users_baseline+0.5],'r')
+title('Correlation between all users')
 
-% INFERRED VS BASELINE
-ave_between_corr_inf = mean(corr_between_bas_inf,1);
-ave_between_corr_bas2 = mean(corr_between_bas_inf,2);
-
-figure
-xlabel('within group correlation')
-ylabel('between groups correlation')
-hold on
-plot([ave_within_cor_bas],[ave_between_corr_bas2'],'sr')
-plot([ave_within_cor_inf],[ave_between_corr_inf],'sb')
-legend('Baseline system','Inferred system')
-
-
-
-
-%% Correlation between Baseline and biased, and Baseline and inferred
-figure
-hold on
-h2 = histogram(ave_between_corr_inf);
-h2.BinWidth = 0.02;
-h2 = histogram(ave_between_corr_bias);
-h2.BinWidth = 0.02;
-
-legend('Inferred', 'Biased')
-plot([mean(ave_between_corr_inf),mean(ave_between_corr_inf)],[0,3],'b--')
-plot([mean(ave_between_corr_bias),mean(ave_between_corr_bias)],[0,3],'r--')
-title('correlation to baseline users')
-xlabel('pearson correlation')
+% %% For each user, compute average corr between and within
+% % first compute within group correlation for each user
+% corr_within_baseline = zeros(num_users_baseline,num_users_baseline);
+% for i = 1:num_users_baseline
+%     for j = 1:num_users_baseline
+%         indx_i = ~I_dont_know_baseline(:,i);
+%         indx_j = ~I_dont_know_baseline(:,j);
+%         indx = indx_i & indx_j;
+%         corr_within_baseline(i,j) = corr(FB_source_baseline(indx,i),FB_source_baseline(indx,j));
+%     end
+% end
+% figure
+% subplot(3,1,1) 
+% title('Within user group correlation for baseline system')
+% imagesc(corr_within_baseline, [0,1]);     
+% 
+% corr_within_biased = zeros(num_users_biased,num_users_biased);
+% for i = 1:num_users_biased
+%     for j = 1:num_users_biased
+%         indx_i = ~I_dont_know_biased(:,i);
+%         indx_j = ~I_dont_know_biased(:,j);
+%         indx = indx_i & indx_j;
+%         corr_within_biased(i,j) = corr(FB_source_biased(indx,i),FB_source_biased(indx,j));
+%     end
+% end
+% subplot(3,1,2) 
+% title('Within user group correlation for biased system')
+% imagesc(corr_within_biased, [0,1]);             
+% 
+% corr_within_infered = zeros(num_users_biased,num_users_biased);
+% for i = 1:num_users_biased
+%     for j = 1:num_users_biased
+%         indx_i = ~I_dont_know_biased(:,i);
+%         indx_j = ~I_dont_know_biased(:,j);
+%         indx = indx_i & indx_j;
+%         corr_within_infered(i,j) = corr(FB_source_inferred(indx,i),FB_source_inferred(indx,j));
+%     end
+% end
+% subplot(3,1,3) 
+% title('Within user group correlation for biased system')
+% imagesc(corr_within_infered, [0,1]);     
+% 
+% 
+% % second, calculate between users correlations
+% % biased and baseline:
+% corr_between_bas_bias = zeros(num_users_baseline,num_users_biased);
+% for i = 1:num_users_baseline
+%     for j = 1:num_users_biased
+%         indx_i = ~I_dont_know_baseline(:,i);
+%         indx_j = ~I_dont_know_biased(:,j);
+%         indx = indx_i & indx_j;
+%         corr_between_bas_bias(i,j) = corr(FB_source_baseline(indx,i),FB_source_biased(indx,j));
+%     end
+% end
+% figure
+% subplot(3,1,1) 
+% title('between user group correlation of baseline and biased system')
+% imagesc(corr_between_bas_bias, [0,1]);  
+% 
+% % inferred and baseline:
+% corr_between_bas_inf = zeros(num_users_baseline,num_users_biased);
+% for i = 1:num_users_baseline
+%     for j = 1:num_users_biased
+%         indx_i = ~I_dont_know_baseline(:,i);
+%         indx_j = ~I_dont_know_biased(:,j);
+%         indx = indx_i & indx_j;
+%         corr_between_bas_inf(i,j) = corr(FB_source_baseline(indx,i),FB_source_inferred(indx,j));
+%     end
+% end
+% subplot(3,1,2) 
+% title('between user group correlation of baseline and inferred system')
+% imagesc(corr_between_bas_inf, [0,1]); 
+% 
+% % inferred and biased:
+% corr_between_bias_inf = zeros(num_users_biased,num_users_biased);
+% for i = 1:num_users_biased
+%     for j = 1:num_users_biased
+%         indx_i = ~I_dont_know_biased(:,i);
+%         indx_j = ~I_dont_know_biased(:,j);
+%         indx = indx_i & indx_j;
+%         corr_between_bias_inf(i,j) = corr(FB_source_biased(indx,i),FB_source_inferred(indx,j));
+%     end
+% end
+% subplot(3,1,3) 
+% title('between user group correlation of biased and inferred system')
+% imagesc(corr_between_bias_inf, [0,1]); 
+% 
+% 
+% %% Create a between within corr figure!
+% 
+% % BIASED VS BASELINE
+% ave_between_corr_bias = mean(corr_between_bas_bias,1);
+% ave_between_corr_bas = mean(corr_between_bas_bias,2);
+% 
+% ave_within_cor_bias = (sum(corr_within_biased)-1)./(num_users_biased-1);
+% ave_within_cor_bas = (sum(corr_within_baseline)-1)./(num_users_baseline-1);
+% ave_within_cor_inf = (sum(corr_within_infered)-1)./(num_users_biased-1);
+% 
+% figure
+% xlabel('within group correlation')
+% ylabel('between groups correlation')
+% hold on
+% plot([ave_within_cor_bas],[ave_between_corr_bas'],'sr')
+% plot([ave_within_cor_bias],[ave_between_corr_bias],'sb')
+% legend('Baseline system','Biased system')
+% 
+% % INFERRED VS BASELINE
+% ave_between_corr_inf = mean(corr_between_bas_inf,1);
+% ave_between_corr_bas2 = mean(corr_between_bas_inf,2);
+% 
+% figure
+% xlabel('within group correlation')
+% ylabel('between groups correlation')
+% hold on
+% plot([ave_within_cor_bas],[ave_between_corr_bas2'],'sr')
+% plot([ave_within_cor_inf],[ave_between_corr_inf],'sb')
+% legend('Baseline system','Inferred system')
+% 
+% 
+% 
+% 
+% %% Correlation between Baseline and biased, and Baseline and inferred
+% figure
+% hold on
+% h2 = histogram(ave_between_corr_inf);
+% h2.BinWidth = 0.02;
+% h2 = histogram(ave_between_corr_bias);
+% h2.BinWidth = 0.02;
+% 
+% legend('Inferred', 'Biased')
+% plot([mean(ave_between_corr_inf),mean(ave_between_corr_inf)],[0,3],'b--')
+% plot([mean(ave_between_corr_bias),mean(ave_between_corr_bias)],[0,3],'r--')
+% title('correlation to baseline users')
+% xlabel('pearson correlation')
 
 
 %% Inffer the optimum alpha_j by assuming that the best alpha brings mean_biased estimate toward mean_baseline
