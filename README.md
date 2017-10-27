@@ -17,7 +17,7 @@ We apply our approach to infer user knowledge on feature relevance in sparse lin
 
 If you are using this source code in your research please consider citing us:
 
-[1] Pedram Daee, Tomi Peltola, Aki Vehtari and Samuel Kaski. **User Modelling for Avoiding Overfitting in Interactive Knowledge Elicitation for Prediction**, arXiv preprint arXiv:1710.04881 (2017).
+[1] Pedram Daee, Tomi Peltola, Aki Vehtari and Samuel Kaski. **User Modelling for Avoiding Overfitting in Interactive Knowledge Elicitation for Prediction**, arXiv preprint arXiv:1710.04881 (2017). [[link](https://arxiv.org/abs/1710.04881)].
 
 ## Team
 
