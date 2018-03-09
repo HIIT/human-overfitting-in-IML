@@ -1,6 +1,6 @@
 # User Modelling for Avoiding Overfitting in Interactive Knowledge Elicitation for Prediction
 
-This repository contains the codes and data for user modeling to avoid user overfitting in interactive machine learning. Many algorithms and user interfaces often expose the user to the training data or its statistics which may lead to double use of data and overfitting, if the user reinforces noisy patterns in the data. We propose a user modelling methodology, by assuming simple rational behaviour, to correct this problem [1].
+This repository contains the codes and data for user modeling to avoid user overfitting in interactive machine learning. Many algorithms and user interfaces often expose the user to the training data or its statistics which may lead to double use of data and overfitting, if the user reinforces noisy patterns in the data. We propose a user modelling methodology, by assuming simple rational behaviour, to correct this problem (see the paper [1], and the [slides](Slides-IUI2018.pdf)).
 
 We apply our approach to infer user knowledge on feature relevance (probability of relevance of words in the Amazon reviews) in sparse linear regression. We use a probabilistic sparse linear regression model described in [Daee, P., Peltola, T., Soare, M. et al. Mach Learn (2017) 106: 1599. https://doi.org/10.1007/s10994-017-5651-7].
 
@@ -19,7 +19,7 @@ We apply our approach to infer user knowledge on feature relevance (probability 
 
 If you are using this source code in your research please consider citing us:
 
-[1] Pedram Daee, Tomi Peltola, Aki Vehtari and Samuel Kaski. **User Modelling for Avoiding Overfitting in Interactive Knowledge Elicitation for Prediction**, In Proceedings of the the 23rd ACM International Conference on Intelligent User Interfaces (IUI 2018) (to appear). arXiv preprint arXiv:1710.04881 (2018). [[preprint](https://arxiv.org/abs/1710.04881)].
+[1] Pedram Daee, Tomi Peltola, Aki Vehtari and Samuel Kaski. **User Modelling for Avoiding Overfitting in Interactive Knowledge Elicitation for Prediction**, In *Proceedings of the 23rd ACM International Conference on Intelligent User Interfaces (IUI)*. ACM, 2018. DOI: 10.1145/3172944.3172989. [[preprint](https://arxiv.org/abs/1710.04881)].
 
 
 ## Team
