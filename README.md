@@ -19,7 +19,7 @@ We apply our approach to infer user knowledge on feature relevance (probability 
 
 If you are using this source code in your research please consider citing us:
 
-[1] Pedram Daee, Tomi Peltola, Aki Vehtari and Samuel Kaski. **User Modelling for Avoiding Overfitting in Interactive Knowledge Elicitation for Prediction**, In *Proceedings of the 23rd ACM International Conference on Intelligent User Interfaces (IUI)*. ACM, 2018. DOI: 10.1145/3172944.3172989. [[preprint](https://arxiv.org/abs/1710.04881)].
+[1] Pedram Daee, Tomi Peltola, Aki Vehtari and Samuel Kaski. **User Modelling for Avoiding Overfitting in Interactive Knowledge Elicitation for Prediction**, In *Proceedings of the 23rd ACM International Conference on Intelligent User Interfaces (IUI)*. ACM, 2018. DOI: 10.1145/3172944.3172989. [[Link](https://doi.org/10.1145/3172944.3172989)] [[preprint](https://arxiv.org/abs/1710.04881)].
 
 
 ## Team
